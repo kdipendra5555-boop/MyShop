@@ -1,3 +1,4 @@
+import VisitingCards from "../Categories/VisitingCards";
 import WeddingCards from "../Categories/WeddingCards";
 import Categories from "../Components/Categories";
 import Hero from "../Components/Hero";
@@ -10,6 +11,7 @@ function Home(){
             <Hero/>
             <Categories/>
             <WeddingCards/>
+            <VisitingCards/>
         </div>
     )
 }
