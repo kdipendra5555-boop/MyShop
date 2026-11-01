@@ -1,28 +1,47 @@
-
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import Navbar from "./Components/Navbar";
+
 import Home from "./Pages/Home";
 import WeddingCards from "./Categories/WeddingCards";
+
 import WeddingCardDetails from "./Pages/WeddingCardDetails";
+import VisitingCardDetails from "./Pages/VisitingCardDetails";
+import CashMemoDetails from "./Pages/CashMemoDetails";
 
 function App() {
   return (
     <BrowserRouter>
+      {/* Global Navbar */}
+      <Navbar />
+
       <Routes>
         {/* Home Page */}
         <Route path="/" element={<Home />} />
 
-        {/* Wedding Cards Collection */}
+        {/* Wedding Cards */}
         <Route
           path="/wedding-cards"
           element={<WeddingCards />}
         />
 
-        {/* Individual Wedding Card Details */}
+        {/* Wedding Card Details */}
         <Route
           path="/wedding-cards/:id"
           element={<WeddingCardDetails />}
+        />
+
+        {/* Visiting Card Details */}
+        <Route
+          path="/visiting-cards/:id"
+          element={<VisitingCardDetails />}
+        />
+
+        {/* Cash Memo Details */}
+        <Route
+          path="/cash-memo/:id"
+          element={<CashMemoDetails />}
         />
 
         {/* 404 Page */}
@@ -30,7 +49,9 @@ function App() {
           path="*"
           element={
             <main className="flex min-h-screen flex-col items-center justify-center bg-[#F8F7F4] px-5 text-center text-[#252522]">
-              <h1 className="font-serif text-5xl">404</h1>
+              <h1 className="font-serif text-5xl">
+                404
+              </h1>
 
               <p className="mt-4 text-sm text-[#77736D]">
                 Sorry, this page could not be found.
@@ -44,7 +65,7 @@ function App() {
               </a>
             </main>
           }
-/>
+        />
       </Routes>
     </BrowserRouter>
   );

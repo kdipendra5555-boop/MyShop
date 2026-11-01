@@ -617,7 +617,7 @@ export default function WeddingCards() {
   return (
     <section
       id="wedding-cards"
-      className="min-h-screen bg-[#FAF8F6] px-4 py-12 text-[#29201E] sm:px-8 sm:py-16 lg:px-16 lg:py-20"
+      className="min-h-screen px-4 py-  text-[#29201E] sm:px-8 sm:py-16 lg:px-16 lg:py-20"
     >
       <div className="mx-auto max-w-7xl">
 
@@ -629,13 +629,7 @@ export default function WeddingCards() {
 
           {/* CATEGORY FILTERS */}
 
-          {/* CATEGORY FILTERS */}
-
-<div className="mt-7">
-
-  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#817875]">
-    Explore by Tradition
-  </p>
+<div className="mt-">
 
   <div
     className="
