@@ -627,48 +627,51 @@ export default function WeddingCards() {
 
         <div className="mb-9">
 
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#941B32]">
-            Dot Print / Wedding Collection
-          </p>
-
-          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl">
-            Wedding Invitations
-            <span className="text-[#941B32]">.</span>
-          </h1>
-
-          <p className="mt-4 max-w-xl text-sm leading-7 text-[#817875] sm:text-base">
-            Discover invitation designs thoughtfully
-            created for your special day.
-          </p>
+          {/* CATEGORY FILTERS */}
 
           {/* CATEGORY FILTERS */}
 
-          <div className="mt-7">
+<div className="mt-7">
 
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#817875]">
-              Explore by Tradition
-            </p>
+  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#817875]">
+    Explore by Tradition
+  </p>
 
-            <div className="flex flex-wrap gap-2">
+  <div
+    className="
+      flex flex-nowrap gap-2
+      overflow-x-auto overflow-y-hidden
+      whitespace-nowrap
+      pb-2
+      -mx-4 px-4
+      sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0
+      scrollbar-hide
+    "
+  >
+    {categories.map((category) => (
+      <button
+        key={category}
+        type="button"
+        onClick={() => setSelectedCategory(category)}
+        aria-pressed={selectedCategory === category}
+        className={`
+          shrink-0 rounded-full border
+          px-4 py-2.5 text-xs
+          transition-all duration-200 sm:text-sm
 
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => setSelectedCategory(category)}
-                  aria-pressed={selectedCategory === category}
-                  className={`rounded-full border px-4 py-2.5 text-xs transition-all duration-200 sm:text-sm ${
-                    selectedCategory === category
-                      ? "border-[#941B32] bg-[#941B32] text-white"
-                      : "border-[#E5DDD7] bg-white text-[#817875] hover:border-[#941B32] hover:text-[#941B32]"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+          ${
+            selectedCategory === category
+              ? "border-[#941B32] bg-[#941B32] text-white"
+              : "border-[#E5DDD7] bg-white text-[#817875] hover:border-[#941B32] hover:text-[#941B32]"
+          }
+        `}
+      >
+        {category}
+      </button>
+    ))}
+  </div>
 
-            </div>
-          </div>
+</div>
         </div>
 
         {/* ==================================
