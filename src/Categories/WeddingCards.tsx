@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
   Heart,
-  RefreshCw,
   ImageOff,
   AlertCircle,
   ShoppingCart,
@@ -48,14 +47,14 @@ const WHATSAPP_NUMBER = (
   import.meta.env.VITE_WHATSAPP_NUMBER || ""
 ).replace(/\D/g, "");
 
-const BRAND = {
-  primary: "#941B32",
-  dark: "#761326",
-  background: "#FAF8F6",
-  text: "#29201E",
-  muted: "#817875",
-  border: "#EEE7E2",
-};
+// const BRAND = {
+//   primary: "#941B32",
+//   dark: "#761326",
+//   background: "#FAF8F6",
+//   text: "#29201E",
+//   muted: "#817875",
+//   border: "#EEE7E2",
+// };
 
 // ==========================================
 // CSV UTILITIES
