@@ -746,17 +746,7 @@ export default function WeddingCards() {
             </div>
           )}
 
-        {/* Footer */}
-        <div className="mt-16 flex flex-col gap-3 border-t border-[#E4DED5] pt-6 text-xs leading-6 text-[#89837A] sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            Beautifully printed. Thoughtfully delivered.
-          </p>
-
-          <p>
-            Prices shown are per card. Confirm quantity
-            and final pricing before ordering.
-          </p>
-        </div>
+        
       </div>
     </section>
   );
