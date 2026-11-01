@@ -1,13 +1,23 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
   ArrowUpRight,
   Heart,
-  MessageCircle,
   RefreshCw,
   ImageOff,
   AlertCircle,
+  ShoppingCart,
+  Check,
+  CreditCard,
 } from "lucide-react";
+
+import { addToCart } from "../utils/cart";
+
+// ==========================================
+// TYPES
+// ==========================================
 
 type WeddingCardItem = {
   id: string;
@@ -15,6 +25,7 @@ type WeddingCardItem = {
   description: string;
   category: string;
   price: number | null;
+  originalPrice: number | null;
   imageUrl: string;
   imageUrls: string[];
   printing: string;
@@ -22,7 +33,12 @@ type WeddingCardItem = {
   codAvailable: string;
   additionalInformation: string;
   available: boolean;
+  badge: string;
 };
+
+// ==========================================
+// CONFIGURATION
+// ==========================================
 
 const SHEET_URL = (
   import.meta.env.VITE_WEDDING_CARDS_CSV_URL || ""
@@ -31,6 +47,19 @@ const SHEET_URL = (
 const WHATSAPP_NUMBER = (
   import.meta.env.VITE_WHATSAPP_NUMBER || ""
 ).replace(/\D/g, "");
+
+const BRAND = {
+  primary: "#941B32",
+  dark: "#761326",
+  background: "#FAF8F6",
+  text: "#29201E",
+  muted: "#817875",
+  border: "#EEE7E2",
+};
+
+// ==========================================
+// CSV UTILITIES
+// ==========================================
 
 function normalizeHeader(header: string): string {
   return header
@@ -42,6 +71,7 @@ function normalizeHeader(header: string): string {
 
 function parseCSV(csv: string): string[][] {
   const rows: string[][] = [];
+
   let row: string[] = [];
   let cell = "";
   let quoted = false;
@@ -94,9 +124,7 @@ function parseCSV(csv: string): string[][] {
 function parsePrice(value: string): number | null {
   const cleaned = value.replace(/[₹,\s]/g, "").trim();
 
-  if (!cleaned) {
-    return null;
-  }
+  if (!cleaned) return null;
 
   const price = Number(cleaned);
 
@@ -110,8 +138,6 @@ function parsePrice(value: string): number | null {
 function parseAvailability(value: string): boolean {
   const normalized = value.trim().toLowerCase();
 
-  // Blank availability defaults to available.
-  // Set FALSE, NO, 0, or UNAVAILABLE in Sheets to disable ordering.
   return ![
     "false",
     "no",
@@ -122,15 +148,34 @@ function parseAvailability(value: string): boolean {
   ].includes(normalized);
 }
 
-function inferCategory(name: string, description: string): string {
+// ==========================================
+// CATEGORY UTILITIES
+// ==========================================
+
+function inferCategory(
+  name: string,
+  description: string
+): string {
   const text = `${name} ${description}`.toLowerCase();
 
   const categoryRules: Array<[RegExp, string]> = [
-    [/\b(hindu|sanatan|mandap|vivah|ganesh|radha|ram|krishna)\b/, "Hindu Wedding Cards"],
-    [/\b(muslim|islamic|nikah|nikkah|muslim)\b/, "Muslim Wedding Cards"],
+    [
+      /\b(hindu|sanatan|mandap|vivah|ganesh|radha|ram|krishna)\b/,
+      "Hindu Wedding Cards",
+    ],
+    [
+      /\b(muslim|islamic|nikah|nikkah)\b/,
+      "Muslim Wedding Cards",
+    ],
     [/\b(tamil)\b/, "Tamil Wedding Cards"],
-    [/\b(sikh|punjabi|anand karaj)\b/, "Sikh Wedding Cards"],
-    [/\b(christian|church|bible)\b/, "Christian Wedding Cards"],
+    [
+      /\b(sikh|punjabi|anand karaj)\b/,
+      "Sikh Wedding Cards",
+    ],
+    [
+      /\b(christian|church|bible)\b/,
+      "Christian Wedding Cards",
+    ],
     [/\b(bengali|bangla)\b/, "Bengali Wedding Cards"],
     [/\b(telugu)\b/, "Telugu Wedding Cards"],
     [/\b(kannada|kannadiga)\b/, "Kannada Wedding Cards"],
@@ -157,16 +202,20 @@ function normalizeCategory(
     "hindu wedding": "Hindu Wedding Cards",
     "hindu wedding card": "Hindu Wedding Cards",
     "hindu wedding cards": "Hindu Wedding Cards",
+
     muslim: "Muslim Wedding Cards",
     islamic: "Muslim Wedding Cards",
     nikah: "Muslim Wedding Cards",
     "muslim wedding": "Muslim Wedding Cards",
     "muslim wedding cards": "Muslim Wedding Cards",
+
     tamil: "Tamil Wedding Cards",
     "tamil wedding": "Tamil Wedding Cards",
     "tamil wedding cards": "Tamil Wedding Cards",
+
     sikh: "Sikh Wedding Cards",
     punjabi: "Sikh Wedding Cards",
+
     christian: "Christian Wedding Cards",
     bengali: "Bengali Wedding Cards",
     telugu: "Telugu Wedding Cards",
@@ -182,18 +231,25 @@ function normalizeCategory(
   return inferCategory(name, description);
 }
 
+// ==========================================
+// READ GOOGLE SHEETS
+// ==========================================
+
 function readCards(csv: string): WeddingCardItem[] {
   const rows = parseCSV(csv);
 
-  if (rows.length < 2) {
-    return [];
-  }
+  if (rows.length < 2) return [];
 
   const headers = rows[0].map(normalizeHeader);
 
-  const get = (row: string[], ...names: string[]): string => {
+  const get = (
+    row: string[],
+    ...names: string[]
+  ): string => {
     for (const name of names) {
-      const index = headers.indexOf(normalizeHeader(name));
+      const index = headers.indexOf(
+        normalizeHeader(name)
+      );
 
       if (index >= 0) {
         return (row[index] ?? "").trim();
@@ -212,9 +268,14 @@ function readCards(csv: string): WeddingCardItem[] {
       "title"
     );
 
-    if (!name) {
-      return [];
-    }
+    if (!name) return [];
+
+    const description = get(
+      row,
+      "description",
+      "details",
+      "short description"
+    );
 
     const imageUrls = [
       get(row, "imageUrl", "imageUrl1", "image 1 url", "image 1"),
@@ -231,42 +292,59 @@ function readCards(csv: string): WeddingCardItem[] {
       {
         id,
         name,
-        description: get(
-          row,
-          "description",
-          "details",
-          "short description"
-        ),
+        description,
+
         category: normalizeCategory(
-          get(row, "category", "card category", "tradition", "wedding category"),
+          get(
+            row,
+            "category",
+            "card category",
+            "tradition",
+            "wedding category"
+          ),
           name,
-          get(row, "description", "details", "short description")
+          description
         ),
-        price: parsePrice(get(row, "price", "card price")),
+
+        price: parsePrice(
+          get(row, "price", "card price")
+        ),
+
+        originalPrice: parsePrice(
+          get(row, "originalPrice", "original price", "mrp")
+        ),
+
         imageUrl: imageUrls[0] || "",
         imageUrls,
+
         printing: get(row, "printing", "printing type"),
+
         shipping: get(row, "shipping", "delivery"),
+
         codAvailable: get(
           row,
           "cod available",
           "cod",
           "cash on delivery"
         ),
+
         additionalInformation: get(
           row,
           "additional information",
           "additionalInformation",
           "extra information"
         ),
+
         available: parseAvailability(
           get(row, "available", "availability", "in stock")
         ),
+
+        badge: get(row, "badge", "label", "tag") || "Best Seller",
       },
     ];
   });
 
-  // Prevent duplicate React keys if IDs are repeated in the sheet.
+  // Handle duplicate IDs
   const seenIds = new Set<string>();
 
   return cards.map((card, index) => {
@@ -285,12 +363,14 @@ function readCards(csv: string): WeddingCardItem[] {
   });
 }
 
+// ==========================================
+// WHATSAPP UTILITIES
+// ==========================================
+
 function getWhatsAppUrl(
   number: string,
   message: string
 ): string {
-  // Supports either a 10-digit Indian number or a number
-  // already containing India's country code 91.
   let internationalNumber = number;
 
   if (internationalNumber.startsWith("0")) {
@@ -310,22 +390,35 @@ function getWhatsAppUrl(
 }
 
 function formatPrice(price: number | null): string {
-  if (price === null) {
-    return "Price on request";
-  }
+  if (price === null) return "Price on request";
 
   return `₹${price.toLocaleString("en-IN")}`;
 }
 
+// ==========================================
+// MAIN COMPONENT
+// ==========================================
+
 export default function WeddingCards() {
   const [cards, setCards] = useState<WeddingCardItem[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("All Cards");
+
+  const [selectedCategory, setSelectedCategory] =
+    useState("All Cards");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const [refreshKey, setRefreshKey] = useState(0);
+
   const [failedImages, setFailedImages] = useState<string[]>([]);
 
+  const [addedItems, setAddedItems] = useState<string[]>([]);
+
   const navigate = useNavigate();
+
+  // ========================================
+  // LOAD GOOGLE SHEETS
+  // ========================================
 
   useEffect(() => {
     const controller = new AbortController();
@@ -338,6 +431,7 @@ export default function WeddingCards() {
         setError(
           "Google Sheets CSV URL is missing. Please configure VITE_WEDDING_CARDS_CSV_URL in your .env file."
         );
+
         setLoading(false);
         return;
       }
@@ -363,7 +457,7 @@ export default function WeddingCards() {
           csv.trimStart().startsWith("<")
         ) {
           throw new Error(
-            "Google Sheets did not return CSV data. Publish the spreadsheet to the web as CSV and check the URL."
+            "Google Sheets did not return CSV data. Check your published CSV URL."
           );
         }
 
@@ -371,16 +465,14 @@ export default function WeddingCards() {
 
         if (result.length === 0) {
           throw new Error(
-            'No wedding cards were found. Check that your sheet contains a header named "name" or "Card Name" and that product rows contain names.'
+            'No wedding cards found. Check that your sheet contains a "name" or "Card Name" column.'
           );
         }
 
         setCards(result);
         setFailedImages([]);
       } catch (err) {
-        if (controller.signal.aborted) {
-          return;
-        }
+        if (controller.signal.aborted) return;
 
         setError(
           err instanceof Error
@@ -401,6 +493,10 @@ export default function WeddingCards() {
     };
   }, [refreshKey]);
 
+  // ========================================
+  // CATEGORIES
+  // ========================================
+
   const categories = useMemo(() => {
     const uniqueCategories = Array.from(
       new Set(
@@ -412,6 +508,10 @@ export default function WeddingCards() {
 
     return ["All Cards", ...uniqueCategories];
   }, [cards]);
+
+  // ========================================
+  // FILTER PRODUCTS
+  // ========================================
 
   const filteredCards = useMemo(() => {
     if (selectedCategory === "All Cards") {
@@ -425,10 +525,46 @@ export default function WeddingCards() {
     );
   }, [cards, selectedCategory]);
 
-  function orderCard(card: WeddingCardItem) {
-    if (!card.available) {
+  // ========================================
+  // ADD TO CART
+  // ========================================
+
+  function handleAddToCart(card: WeddingCardItem) {
+    if (!card.available) return;
+
+    if (card.price === null) {
+      window.alert(
+        "Price is not available. Please enquire on WhatsApp."
+      );
       return;
     }
+
+    addToCart({
+      id: card.id,
+      name: card.name,
+      price: card.price,
+      image: card.imageUrl,
+    });
+
+    setAddedItems((previous) =>
+      previous.includes(card.id)
+        ? previous
+        : [...previous, card.id]
+    );
+
+    window.setTimeout(() => {
+      setAddedItems((previous) =>
+        previous.filter((id) => id !== card.id)
+      );
+    }, 1800);
+  }
+
+  // ========================================
+  // ORDER NOW - WHATSAPP
+  // ========================================
+
+  function orderCard(card: WeddingCardItem) {
+    if (!card.available) return;
 
     if (!WHATSAPP_NUMBER) {
       window.alert(
@@ -446,6 +582,10 @@ export default function WeddingCards() {
       `Card ID: ${card.id}`,
       `Price per card: ${formatPrice(card.price)}`,
       "",
+      `Printing: ${card.printing || "Please share options"}`,
+      `Shipping: ${card.shipping || "Please share details"}`,
+      `COD: ${card.codAvailable || "Please confirm"}`,
+      "",
       "Please share the minimum order quantity, printing options, and final pricing.",
     ].join("\n");
 
@@ -461,64 +601,85 @@ export default function WeddingCards() {
     );
   }
 
+  // ========================================
+  // PRODUCT DETAILS
+  // ========================================
+
   function openDetails(card: WeddingCardItem) {
     navigate(
       `/wedding-cards/${encodeURIComponent(card.id)}`
     );
   }
 
+  // ========================================
+  // RENDER
+  // ========================================
+
   return (
     <section
       id="wedding-cards"
-      className="min-h-screen bg-[#F8F7F4] px-5 py-16 text-[#252522] sm:px-8 lg:px-16 lg:py-24"
+      className="min-h-screen bg-[#FAF8F6] px-4 py-12 text-[#29201E] sm:px-8 sm:py-16 lg:px-16 lg:py-20"
     >
       <div className="mx-auto max-w-7xl">
-        {/* Heading */}
-        <div className="mb-10">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-[#A96B48]">
+
+        {/* ==================================
+            HEADING
+        ================================== */}
+
+        <div className="mb-9">
+
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#941B32]">
             Dot Print / Wedding Collection
           </p>
 
           <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl">
             Wedding Invitations
-            <span className="text-[#A96B48]">.</span>
+            <span className="text-[#941B32]">.</span>
           </h1>
 
-          <p className="mt-4 max-w-xl text-sm leading-7 text-[#77736D] sm:text-base">
+          <p className="mt-4 max-w-xl text-sm leading-7 text-[#817875] sm:text-base">
             Discover invitation designs thoughtfully
             created for your special day.
           </p>
 
-          {/* Wedding card categories */}
+          {/* CATEGORY FILTERS */}
+
           <div className="mt-7">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#89837A]">
+
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#817875]">
               Explore by Tradition
             </p>
 
             <div className="flex flex-wrap gap-2">
+
               {categories.map((category) => (
                 <button
                   key={category}
                   type="button"
                   onClick={() => setSelectedCategory(category)}
                   aria-pressed={selectedCategory === category}
-                  className={`rounded-full border px-4 py-2.5 text-sm transition ${
+                  className={`rounded-full border px-4 py-2.5 text-xs transition-all duration-200 sm:text-sm ${
                     selectedCategory === category
-                      ? "border-[#252522] bg-[#252522] text-white"
-                      : "border-[#DCD5CB] bg-white text-[#77736D] hover:border-[#A96B48] hover:text-[#A96B48]"
+                      ? "border-[#941B32] bg-[#941B32] text-white"
+                      : "border-[#E5DDD7] bg-white text-[#817875] hover:border-[#941B32] hover:text-[#941B32]"
                   }`}
                 >
                   {category}
                 </button>
               ))}
+
             </div>
           </div>
         </div>
 
-        {/* Collection metadata */}
-        <div className="flex items-center justify-between border-y border-[#E4DED5] py-4">
+        {/* ==================================
+            COLLECTION METADATA
+        ================================== */}
+
+        {/* <div className="flex items-center justify-between border-y border-[#EEE7E2] py-4">
+
           <p
-            className="text-sm text-[#77736D]"
+            className="text-sm text-[#817875]"
             aria-live="polite"
           >
             {loading
@@ -536,55 +697,66 @@ export default function WeddingCards() {
               setRefreshKey((key) => key + 1)
             }
             disabled={loading}
-            className="inline-flex items-center gap-2 text-sm text-[#77736D] transition hover:text-[#A96B48] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 text-sm text-[#817875] transition hover:text-[#941B32] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCw
               size={15}
-              className={
-                loading ? "animate-spin" : ""
-              }
+              className={loading ? "animate-spin" : ""}
             />
+
             Refresh
           </button>
-        </div>
 
-        {/* Loading skeleton */}
+        </div> */}
+
+        {/* ==================================
+            LOADING SKELETON
+        ================================== */}
+
         {loading && (
           <div
-            className="grid grid-cols-2 gap-5 py-10 md:grid-cols-3 lg:grid-cols-4"
+            className="grid grid-cols-2 gap-4 py-10 sm:gap-6 md:grid-cols-3 lg:grid-cols-4"
             aria-label="Loading wedding cards"
           >
-            {Array.from({ length: 8 }).map(
-              (_, index) => (
-                <div
-                  key={index}
-                  className="animate-pulse"
-                >
-                  <div className="aspect-[3/4] rounded-xl bg-[#EAE5DD]" />
-                  <div className="mt-4 h-4 w-3/4 rounded bg-[#EAE5DD]" />
-                  <div className="mt-3 h-3 w-1/2 rounded bg-[#EAE5DD]" />
-                </div>
-              )
-            )}
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div
+                key={index}
+                className="animate-pulse overflow-hidden rounded-[20px] border border-[#EEE7E2] bg-white p-2"
+              >
+                <div className="h-[150px] rounded-[15px] bg-[#EAE5DD]" />
+
+                <div className="mt-4 h-4 w-3/4 rounded bg-[#EAE5DD]" />
+
+                <div className="mt-3 h-3 w-1/2 rounded bg-[#EAE5DD]" />
+
+                <div className="mt-5 h-9 rounded-full bg-[#EAE5DD]" />
+
+                <div className="mt-2 h-9 rounded-full bg-[#EAE5DD]" />
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Error state */}
+        {/* ==================================
+            ERROR STATE
+        ================================== */}
+
         {!loading && error && (
           <div
-            className="my-10 rounded-2xl border border-[#E4DED5] bg-white p-8 text-center"
+            className="my-10 rounded-2xl border border-[#EEE7E2] bg-white p-8 text-center"
             role="alert"
           >
+
             <AlertCircle
               size={30}
-              className="mx-auto text-[#A96B48]"
+              className="mx-auto text-[#941B32]"
             />
 
             <p className="mt-4 font-medium">
               Unable to load the collection
             </p>
 
-            <p className="mt-2 break-words text-sm leading-6 text-[#77736D]">
+            <p className="mt-2 break-words text-sm leading-6 text-[#817875]">
               {error}
             </p>
 
@@ -593,27 +765,38 @@ export default function WeddingCards() {
               onClick={() =>
                 setRefreshKey((key) => key + 1)
               }
-              className="mt-5 rounded-full bg-[#252522] px-5 py-3 text-sm text-white transition hover:bg-[#A96B48]"
+              className="mt-5 rounded-full bg-[#941B32] px-5 py-3 text-sm text-white transition hover:bg-[#761326]"
             >
               Try again
             </button>
+
           </div>
         )}
 
-        {/* Product grid */}
+        {/* ==================================
+            PRODUCT GRID
+        ================================== */}
+
         {!loading &&
           !error &&
           filteredCards.length > 0 && (
-            <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-9 sm:gap-x-6 lg:grid-cols-3 xl:grid-cols-4">
+
+            <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-6 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4">
+
               {filteredCards.map((card) => (
+
                 <article
                   key={card.id}
-                  className="group min-w-0"
+                  className="group min-w-0 overflow-hidden rounded-[20px] border border-[#EEE7E2] bg-white p-2 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                 >
-                  {/* Product image */}
-                  <div className="relative overflow-hidden rounded-xl bg-[#EAE5DD]">
+
+                  {/* PRODUCT IMAGE */}
+
+                  <div className="relative overflow-hidden rounded-[15px] bg-[#F5F3F0]">
+
                     {card.imageUrl &&
                     !failedImages.includes(card.id) ? (
+
                       <img
                         src={card.imageUrl}
                         alt={card.name}
@@ -625,10 +808,13 @@ export default function WeddingCards() {
                               : [...previous, card.id]
                           )
                         }
-                        className="aspect-[3/4] w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                        className="h-[125px] w-full object-cover transition duration-500 group-hover:scale-105 sm:h-[170px] lg:h-[180px]"
                       />
+
                     ) : (
-                      <div className="flex aspect-[3/4] flex-col items-center justify-center gap-3 text-[#93887B]">
+
+                      <div className="flex h-[125px] flex-col items-center justify-center gap-3 text-[#93887B] sm:h-[170px] lg:h-[180px]">
+
                         <ImageOff
                           size={28}
                           strokeWidth={1.3}
@@ -637,98 +823,166 @@ export default function WeddingCards() {
                         <span className="px-2 text-center text-xs">
                           Image unavailable
                         </span>
+
                       </div>
+
                     )}
 
-                    {/* <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-medium text-[#77736D]">
-                      Wedding Collection
-                    </span> */}
+                    {/* PRODUCT BADGE */}
+
+                    {/* {card.badge && (
+                      <span className="absolute left-2 top-2 rounded-full bg-[#941B32] px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-wide text-white shadow-sm sm:left-2.5 sm:top-2.5 sm:px-3 sm:text-[9px]">
+                        {card.badge}
+                      </span>
+                    )} */}
+
+                    {/* UNAVAILABLE BADGE */}
 
                     {!card.available && (
-                      <span className="absolute bottom-3 left-3 rounded-full bg-[#252522]/90 px-3 py-1.5 text-[10px] font-medium text-white">
+                      <span className="absolute bottom-2 left-2 rounded-full bg-[#29201E]/90 px-2.5 py-1.5 text-[9px] font-medium text-white">
                         Currently unavailable
                       </span>
                     )}
+
+                    {/* DETAILS BUTTON */}
 
                     <button
                       type="button"
                       aria-label={`See details for ${card.name}`}
                       onClick={() => openDetails(card)}
-                      className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#252522] shadow-sm transition hover:bg-[#252522] hover:text-white"
+                      className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-[#29201E] shadow-sm transition hover:bg-[#941B32] hover:text-white sm:h-9 sm:w-9"
                     >
-                      <ArrowUpRight size={19} />
+                      <ArrowUpRight size={17} />
                     </button>
+
                   </div>
 
-                  {/* Product details */}
-                  <div className="flex items-start justify-between gap-2 pt-4">
-                    <div className="min-w-0">
-                      <h2 className="truncate text-sm font-medium sm:text-base">
+                  {/* ==================================
+                      PRODUCT DETAILS
+                  ================================== */}
+
+                  <div className="px-1.5 pb-1 pt-3">
+
+                    {/* PRODUCT NAME */}
+
+                    <div className="flex items-start justify-between gap-1">
+
+                      <h2 className="line-clamp-1 min-w-0 text-[13px] font-semibold text-[#29201E] sm:text-[15px]">
                         {card.name}
                       </h2>
 
-                      {card.description && (
-                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#89837A] sm:text-sm">
-                          {card.description}
-                        </p>
-                      )}
+                      <Heart
+                        size={15}
+                        strokeWidth={1.5}
+                        className="mt-0.5 shrink-0 text-[#941B32]"
+                      />
 
-                      <p className="mt-3 text-sm font-semibold">
-                        {formatPrice(card.price)}
-
-                        {card.price !== null && (
-                          <span className="ml-1 font-normal text-[#89837A]">
-                            / card
-                          </span>
-                        )}
-                      </p>
                     </div>
 
-                    <Heart
-                      size={17}
-                      strokeWidth={1.4}
-                      className="mt-1 shrink-0 text-[#A96B48]"
-                    />
-                  </div>
+                    {/* DESCRIPTION */}
 
-                  {/* Action buttons */}
-                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <p className="mt-1 line-clamp-2 min-h-[34px] text-[10px] leading-[17px] text-[#817875] sm:text-xs sm:leading-[18px]">
+                      {card.description || "Beautifully designed wedding invitation."}
+                    </p>
+
+                    {/* PRICE */}
+
+                    <div className="mt-2 flex min-h-[24px] flex-wrap items-center gap-2">
+
+                      <span className="text-[15px] font-bold text-[#941B32] sm:text-base">
+                        {formatPrice(card.price)}
+                      </span>
+
+                      {card.originalPrice !== null &&
+                        card.price !== null &&
+                        card.originalPrice > card.price && (
+                          <span className="text-[10px] text-gray-400 line-through sm:text-xs">
+                            {formatPrice(card.originalPrice)}
+                          </span>
+                        )}
+
+                    </div>
+
+                    {/* ==================================
+                        ADD TO CART
+                    ================================== */}
+
+                    <button
+                      type="button"
+                      disabled={!card.available || card.price === null}
+                      onClick={() => handleAddToCart(card)}
+                      className={`
+                        mt-3 flex h-[36px] w-full items-center
+                        justify-center gap-2 rounded-full border
+                        text-[10px] font-medium transition-all
+                        duration-300 sm:h-[38px] sm:text-xs
+
+                        ${
+                          addedItems.includes(card.id)
+                            ? "border-green-600 bg-green-50 text-green-700"
+                            : "border-[#941B32] bg-white text-[#941B32] hover:bg-[#FFF5F6]"
+                        }
+
+                        disabled:cursor-not-allowed
+                        disabled:opacity-40
+                      `}
+                    >
+
+                      {addedItems.includes(card.id) ? (
+                        <>
+                          <Check size={14} />
+                          Added to Cart
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart size={14} />
+                          Add to Cart
+                        </>
+                      )}
+
+                    </button>
+
+                    {/* ==================================
+                        ORDER NOW
+                    ================================== */}
+
                     <button
                       type="button"
                       disabled={!card.available}
                       onClick={() => orderCard(card)}
-                      className="flex min-w-0 items-center justify-center gap-1.5 rounded-full bg-[#252522] px-2 py-3 text-xs font-medium text-white transition hover:bg-[#A96B48] disabled:cursor-not-allowed disabled:opacity-40 sm:gap-2 sm:px-3 sm:text-sm"
+                      className="mt-2 flex h-[36px] w-full items-center justify-center gap-2 rounded-full bg-[#941B32] text-[10px] font-semibold text-white transition-all duration-300 hover:bg-[#761326] disabled:cursor-not-allowed disabled:opacity-40 sm:h-[38px] sm:text-xs"
                     >
-                      <MessageCircle size={15} />
+                      <CreditCard size={14} />
                       Order Now
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() => openDetails(card)}
-                      className="flex min-w-0 items-center justify-center gap-1.5 rounded-full border border-[#DCD5CB] px-2 py-3 text-xs font-medium transition hover:border-[#252522] hover:bg-white sm:gap-2 sm:px-3 sm:text-sm"
-                    >
-                      <ArrowUpRight size={15} />
-                      See Details
-                    </button>
                   </div>
+
                 </article>
+
               ))}
+
             </div>
+
           )}
 
-        {/* Empty state */}
+        {/* ==================================
+            EMPTY STATE
+        ================================== */}
+
         {!loading &&
           !error &&
           filteredCards.length === 0 && (
+
             <div className="py-20 text-center">
+
               <p className="font-serif text-2xl">
                 {selectedCategory !== "All Cards"
                   ? `No designs found in ${selectedCategory}.`
                   : "No designs available yet."}
               </p>
 
-              <p className="mt-3 text-sm text-[#77736D]">
+              <p className="mt-3 text-sm text-[#817875]">
                 {selectedCategory !== "All Cards"
                   ? "Choose another category or select All Cards."
                   : "Add wedding card designs to your Google Sheet and refresh the collection."}
@@ -738,16 +992,18 @@ export default function WeddingCards() {
                 <button
                   type="button"
                   onClick={() => setSelectedCategory("All Cards")}
-                  className="mt-5 rounded-full border border-[#DCD5CB] px-5 py-2.5 text-sm transition hover:bg-white"
+                  className="mt-5 rounded-full border border-[#EEE7E2] px-5 py-2.5 text-sm transition hover:bg-white"
                 >
                   View all cards
                 </button>
               )}
+
             </div>
+
           )}
 
-        
       </div>
     </section>
   );
 }
+
