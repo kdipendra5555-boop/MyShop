@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 
 interface Product {
@@ -108,7 +109,9 @@ const shuffleProducts = (products: Product[]) => {
 };
 
 const SchoolProducts = () => {
-  const [products] = useState(() => shuffleProducts(schoolProducts));
+  const [products] = useState(() =>
+    shuffleProducts(schoolProducts)
+  );
 
   return (
     <section className="bg-[#FAF8F5] px-4 py-10 sm:px-8 sm:py-14 lg:px-16 lg:py-16">
@@ -146,15 +149,20 @@ const SchoolProducts = () => {
               key={product.id}
               className="group overflow-hidden rounded-xl bg-white transition duration-300 hover:-translate-y-1 hover:shadow-lg"
             >
-              <div className="aspect-[4/5] overflow-hidden bg-[#F1ECE7]">
+              {/* Image */}
+              <Link
+                to={`/school-products/${product.id}`}
+                className="block aspect-[4/5] overflow-hidden bg-[#F1ECE7]"
+              >
                 <img
                   src={product.image}
                   alt={product.name}
                   loading="lazy"
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                 />
-              </div>
+              </Link>
 
+              {/* Information */}
               <div className="p-3 sm:p-4">
                 <span className="text-[9px] font-semibold uppercase tracking-wider text-[#A36E65] sm:text-[10px]">
                   {product.category}
@@ -168,10 +176,14 @@ const SchoolProducts = () => {
                   {product.price}
                 </p>
 
-                <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[#8B3A3A] py-2 text-xs font-medium text-[#8B3A3A] transition hover:bg-[#8B3A3A] hover:text-white sm:text-sm">
+                {/* Details Link */}
+                <Link
+                  to={`/school-products/${product.id}`}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[#8B3A3A] py-2 text-xs font-medium text-[#8B3A3A] transition hover:bg-[#8B3A3A] hover:text-white sm:text-sm"
+                >
                   View Details
                   <ArrowRight size={14} />
-                </button>
+                </Link>
               </div>
             </div>
           ))}

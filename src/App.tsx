@@ -9,6 +9,8 @@ import WeddingCards from "./Categories/WeddingCards";
 import WeddingCardDetails from "./Pages/WeddingCardDetails";
 import VisitingCardDetails from "./Pages/VisitingCardDetails";
 import CashMemoDetails from "./Pages/CashMemoDetails";
+import SchoolProductDetailsPage from "./Pages/SchoolProductDetailsPage";
+import SchoolProductsPage from "./Pages/SchoolProductsPage";
 
 function App() {
   return (
@@ -43,6 +45,18 @@ function App() {
           path="/cash-memo/:id"
           element={<CashMemoDetails />}
         />
+
+        <Route
+  path="/school-products"
+  element={<SchoolProductsPage />}
+/>
+
+<Route
+  path="/school-products/:productId"
+  element={<SchoolProductDetailsPage />}
+/>
+
+
 
         {/* 404 Page */}
         <Route

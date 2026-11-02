@@ -144,29 +144,33 @@ const Navbar = () => {
           </button>
 
           {/* Logo */}
-          <Link
-            to="/"
-            onClick={() => setMenuOpen(false)}
-            className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center"
-          >
-            <div className="flex items-center gap-1.5">
+{/* Logo */}
+<Link
+  to="/"
+  onClick={() => setMenuOpen(false)}
+  className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center"
+>
+  <div className="flex items-center gap-1">
 
-              <div className="w-6 h-7 bg-[#851c2b] rounded-md flex items-center justify-center">
-                <span className="text-white font-serif font-bold text-lg">
-                  D
-                </span>
-              </div>
+    {/* Dot Print Icon */}
+    <img
+      src="/logo.png"
+      alt="Dot Print Icon"
+      className="w-7 h-7 sm:w-10 sm:h-10 object-contain"
+    />
 
-              <span className="text-[23px] sm:text-[27px] font-bold tracking-tight text-[#761522]">
-                Dot Print
-              </span>
+    {/* Brand Name */}
+    <span className="text-[22px] sm:text-[27px] font-extrabold tracking-tight text-[#8F1D32]">
+      dotprint
+    </span>
 
-            </div>
+  </div>
 
-            <span className="text-[6px] sm:text-[8px] tracking-[4px] font-semibold text-[#777]">
-              PRINTING MADE SIMPLE
-            </span>
-          </Link>
+  {/* Tagline */}
+  <span className="text-[7px] sm:text-[8px] tracking-[px] font-semibold text-[#555] pl-8  mt- ">
+    By Shailendra Press
+  </span>
+</Link>
 
           {/* Actions */}
           <div className="flex items-center gap-4 sm:gap-6">
