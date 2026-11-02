@@ -10,7 +10,6 @@ import {
   ShoppingCart,
   Check,
   CreditCard,
-  RefreshCw,
 } from "lucide-react";
 
 import { addToCart } from "../utils/cart";
