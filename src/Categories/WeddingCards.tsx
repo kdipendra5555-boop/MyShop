@@ -617,7 +617,7 @@ export default function WeddingCards() {
   return (
     <section
       id="wedding-cards"
-      className="min-h-screen px-4 py-  text-[#29201E] sm:px-8 sm:py-16 lg:px-16 lg:py-20"
+      className="px-4 text-[#29201E] sm:px-8 sm:py-8 lg:px-16 lg:py-10"
     >
       <div className="mx-auto max-w-7xl">
 
@@ -625,19 +625,30 @@ export default function WeddingCards() {
             HEADING
         ================================== */}
 
-        <div className="mb-9">
+        {/* SECTION HEADING */}
+<div className="mb-5 pt-5">
+  <p className="mb-1 text-[10px] font-semibold uppercase tracking-[3px] text-[#941B32]">
+    OUR COLLECTION
+  </p>
+
+  <h2 className="text-2xl font-semibold tracking-tight text-[#29201E] sm:text-3xl">
+    Wedding Invitation Cards
+  </h2>
+
+</div>
+
+        <div className="mb-2">
 
           {/* CATEGORY FILTERS */}
 
-<div className="mt-">
+<div className="mt-5 flex items-center justify-between gap-3 sm:mt-6 sm:flex-col sm:items-start">
 
   <div
     className="
       flex flex-nowrap gap-2
       overflow-x-auto overflow-y-hidden
       whitespace-nowrap
-      pb-2
-      -mx-4 px-4
+      -mx-4 px-4 
       sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0
       scrollbar-hide
     "
@@ -777,7 +788,7 @@ export default function WeddingCards() {
           !error &&
           filteredCards.length > 0 && (
 
-            <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-6 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4">
+           <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-6 sm:gap-y-6 md:grid-cols-3 lg:grid-cols-4">
 
               {filteredCards.map((card) => (
 

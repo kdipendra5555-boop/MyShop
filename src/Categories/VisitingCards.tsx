@@ -527,13 +527,24 @@ export default function VisitingCards() {
   return (
     <section
       id="visiting-cards"
-      className="min-h-screen bg-[#FAF8F6] px-4 py-12 text-[#29201E] sm:px-8 sm:py-16 lg:px-16 lg:py-20"
+     className="bg-[#FAF8F6] px-4 pt-6 pb-4 text-[#29201E] sm:px-8 sm:py-8 lg:px-16 lg:py-10"
     >
       <div className="mx-auto max-w-7xl">
 
         {/* HEADING */}
 
-        <div className="mb-">
+        <div className="mb-4 pt-">
+  <p className="mb-1 text-[10px] font-semibold uppercase tracking-[3px] text-[#941B32]">
+    Make your Business
+  </p>
+
+  <h2 className="text-2xl font-semibold tracking-tight text-[#29201E] sm:text-3xl">
+    Premium Vigiting cards
+  </h2>
+
+</div>
+
+        <div className="mb-2">
           {/* CATEGORY FILTERS */}
 
           <div className="mt-">
@@ -576,34 +587,7 @@ export default function VisitingCards() {
 
         {/* COLLECTION BAR */}
 
-        <div className="flex items-center justify-between border-y border-[#EEE7E2] py-4">
-
-          <p className="text-sm text-[#817875]">
-            {loading
-              ? "Loading collection..."
-              : `${filteredCards.length} ${
-                  filteredCards.length === 1
-                    ? "design"
-                    : "designs"
-                }`}
-          </p>
-
-          <button
-            type="button"
-            onClick={() =>
-              setRefreshKey((key) => key + 1)
-            }
-            disabled={loading}
-            className="inline-flex items-center gap-2 text-sm text-[#817875] transition hover:text-[#941B32] disabled:opacity-50"
-          >
-            <RefreshCw
-              size={15}
-              className={loading ? "animate-spin" : ""}
-            />
-            Shuffle Products
-          </button>
-
-        </div>
+       
 
         {/* LOADING */}
 

@@ -117,7 +117,7 @@ const ProductsPage = () => {
   };
 
   return (
-    <main className="min-h-screen bg-[#fdfaf7]">
+    <main className=" bg-[#fdfaf7]">
 
       {/* HEADER */}
       <section className="relative overflow-hidden border-b border-[#eee5df] bg-gradient-to-b from-[#fffdfb] to-[#fdfaf7]">
@@ -149,7 +149,7 @@ const ProductsPage = () => {
       
 
       {/* PRODUCTS */}
-      <section className="mx-auto max-w-7xl px-3 pb-16 sm:px-8">
+    <section className="mx-auto max-w-7xl px-3 pb-2 sm:px-8 sm:pb-4">
 
         
 
