@@ -358,7 +358,7 @@ export default function CashMemo() {
   return (
     <section
       id="cash-memo"
-      className="min-h-screen bg-[#FAF8F6] px-4 py-12 text-[#29201E] sm:px-8 sm:py-16 lg:px-16 lg:py-20"
+      className="bg-[#FAF8F6] px-4 pt-12 pb-0 text-[#29201E] sm:px-8 sm:pt-16 sm:pb-0 lg:px-16 lg:pt-20 lg:pb-0"
     >
       <div className="mx-auto max-w-7xl">
 
